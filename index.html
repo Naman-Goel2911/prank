@@ -24,11 +24,9 @@
             background-color: var(--background);
             overflow-x: hidden;
             min-height: 100vh;
-            /* Prevent pull-to-refresh on mobile */
             overscroll-behavior: none;
         }
 
-        /* Loader Styles */
         #loader {
             display: flex;
             justify-content: center;
@@ -80,7 +78,6 @@
             animation: loadingBar 5s linear forwards;
         }
 
-        /* Download Screen Styles */
         #downloadScreen {
             display: none;
             justify-content: center;
@@ -105,24 +102,19 @@
             position: relative;
             z-index: 10;
             pointer-events: auto;
-            /* Added touch action manipulation */
-            touch-action: manipulation;
-            /* Ensure button is clickable on iOS */
+            touch-action: auto;
             -webkit-appearance: none;
-            /* Add margin for better touch area */
             margin: 1rem;
-            /* Prevent text selection */
             -webkit-user-select: none;
             user-select: none;
+            isolation: isolate;
         }
 
-        /* Add active state for mobile touch feedback */
         .premium-button:active {
             transform: scale(0.98);
             background: linear-gradient(90deg, #1abc54, #45e683);
         }
 
-        /* Remove hover effects on mobile */
         @media (hover: hover) {
             .premium-button:hover {
                 transform: translateY(-2px);
@@ -130,7 +122,6 @@
             }
         }
 
-        /* Final Screen */
         #finalScreen {
             display: none;
             flex-direction: column;
@@ -157,7 +148,6 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
-        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -218,7 +208,6 @@
             max-height: 80vh;
         }
 
-        /* Animations */
         @keyframes shuffleText {
             0%, 100% { content: "Analyzing neural pathways..."; opacity: 1; }
             33% { content: "Training AI models..."; opacity: 0.8; }
@@ -230,7 +219,6 @@
             100% { width: 100%; }
         }
 
-        /* Capybara Button */
         #capybaraButton {
             position: fixed;
             bottom: 0px;
@@ -247,6 +235,7 @@
             transition: transform 0.2s, box-shadow 0.2s;
             -webkit-tap-highlight-color: transparent;
             z-index: 10;
+            touch-action: auto;
         }
 
         #capybaraButton:hover {
@@ -254,7 +243,6 @@
             box-shadow: 0 8px 20px rgba(30, 215, 96, 0.3);
         }
 
-        /* Text styles */
         .sponsor-text {
             color: var(--text);
             margin-top: 1rem;
@@ -267,7 +255,6 @@
             font-size: clamp(1rem, 3vw, 1.2rem);
         }
 
-        /* Prevent text selection */
         .no-select {
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -306,35 +293,29 @@
     </div>
 
     <script>
-        // Get video elements
         const rickrollVideo = document.getElementById('rickrollVideo');
         const cokeVideo = document.getElementById('cokeVideo');
         const modal = document.getElementById('videoModal');
+        const downloadButton = document.getElementById('downloadButton');
 
-        // Simulate loading screen
         setTimeout(() => {
             document.getElementById('loader').style.display = 'none';
             document.getElementById('downloadScreen').style.display = 'flex';
         }, 5000);
 
-        // Play rickroll video after download button click
-        document.getElementById('downloadButton').addEventListener('click', function(e) {
-            e.preventDefault(); // Prevent any default button behavior
-            e.stopPropagation(); // Stop event bubbling
+        function handleDownloadClick(e) {
+            e.stopPropagation();
             
             document.getElementById('downloadScreen').style.display = 'none';
             document.getElementById('finalScreen').style.display = 'flex';
             
-            // Enable audio
             rickrollVideo.muted = false;
             
-            // Play video with better error handling
             const playVideo = async () => {
                 try {
                     await rickrollVideo.play();
                 } catch (error) {
                     console.log("Playback failed:", error);
-                    // Add a play button if autoplay fails
                     rickrollVideo.addEventListener('click', () => {
                         rickrollVideo.play().catch(console.log);
                     });
@@ -342,15 +323,29 @@
             };
             
             playVideo();
-        }, { passive: false }); // Add passive: false for better touch handling
+        }
 
-        // Modal functionality
+        let touchStarted = false;
+        
+        downloadButton.addEventListener('touchstart', function(e) {
+            touchStarted = true;
+        }, { passive: true });
+
+        downloadButton.addEventListener('touchend', function(e) {
+            if (touchStarted) {
+                handleDownloadClick(e);
+                touchStarted = false;
+            }
+        }, { passive: false });
+
+        downloadButton.addEventListener('click', handleDownloadClick);
+
         const capybaraButton = document.getElementById('capybaraButton');
         const closeButton = document.querySelector('.close-button');
 
         capybaraButton.addEventListener('click', () => {
             modal.style.display = 'flex';
-            rickrollVideo.pause(); // Pause rickroll
+            rickrollVideo.pause();
             try {
                 cokeVideo.play().catch(error => {
                     console.log("Autoplay prevented:", error);
@@ -375,14 +370,12 @@
 
         closeButton.addEventListener('click', closeModal);
 
-        // Close modal if clicking outside
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 closeModal();
             }
         });
 
-        // Handle page visibility changes
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 rickrollVideo.pause();
@@ -394,14 +387,6 @@
             }
         });
 
-        // Prevent default touch behaviors on mobile
-        document.addEventListener('touchstart', (e) => {
-            if (e.target.tagName !== 'VIDEO') {
-                e.preventDefault();
-            }
-        }, { passive: false });
-
-        // Handle mobile back button
         window.addEventListener('popstate', () => {
             if (modal.style.display === 'flex') {
                 closeModal();
@@ -409,7 +394,6 @@
             }
         });
 
-        // Push initial state
         history.pushState(null, '', window.location.href);
     </script>
 </body>
