@@ -102,14 +102,32 @@
             border-radius: 50px;
             transition: transform 0.2s, box-shadow 0.2s;
             -webkit-tap-highlight-color: transparent;
-            position: relative; /* Ensure it appears above other elements */
-            z-index: 10; /* High z-index to avoid overlaps */
-            pointer-events: auto; /* Ensure clicks are registered */
+            position: relative;
+            z-index: 10;
+            pointer-events: auto;
+            /* Added touch action manipulation */
+            touch-action: manipulation;
+            /* Ensure button is clickable on iOS */
+            -webkit-appearance: none;
+            /* Add margin for better touch area */
+            margin: 1rem;
+            /* Prevent text selection */
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        .premium-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(30, 215, 96, 0.3);
+        /* Add active state for mobile touch feedback */
+        .premium-button:active {
+            transform: scale(0.98);
+            background: linear-gradient(90deg, #1abc54, #45e683);
+        }
+
+        /* Remove hover effects on mobile */
+        @media (hover: hover) {
+            .premium-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(30, 215, 96, 0.3);
+            }
         }
 
         /* Final Screen */
@@ -300,20 +318,31 @@
         }, 5000);
 
         // Play rickroll video after download button click
-        document.getElementById('downloadButton').addEventListener('click', () => {
+        document.getElementById('downloadButton').addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent any default button behavior
+            e.stopPropagation(); // Stop event bubbling
+            
             document.getElementById('downloadScreen').style.display = 'none';
             document.getElementById('finalScreen').style.display = 'flex';
+            
+            // Enable audio
             rickrollVideo.muted = false;
-            try {
-                // Try to play with user interaction
-                rickrollVideo.play().catch(error => {
-                    console.log("Autoplay prevented:", error);
-                    // Show play button or handle error
-                });
-            } catch (error) {
-                console.log("Play error:", error);
-            }
-        });
+            
+            // Play video with better error handling
+            const playVideo = async () => {
+                try {
+                    await rickrollVideo.play();
+                } catch (error) {
+                    console.log("Playback failed:", error);
+                    // Add a play button if autoplay fails
+                    rickrollVideo.addEventListener('click', () => {
+                        rickrollVideo.play().catch(console.log);
+                    });
+                }
+            };
+            
+            playVideo();
+        }, { passive: false }); // Add passive: false for better touch handling
 
         // Modal functionality
         const capybaraButton = document.getElementById('capybaraButton');
